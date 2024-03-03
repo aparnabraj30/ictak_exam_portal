@@ -55,19 +55,26 @@ const ADashboard = () => {
         fontWeight: 'bold'
     };
 
-    const [batches, setBatches] = useState()
+    const [batches, setBatches] = useState([]);
 
     const fetchBatches = async () => {
-      try {
-        const response = await axios.get("http://localhost:5000/api/batches"); // Assuming your backend is running on localhost:5000
-        setBatches(response.data); // Extract data from the response
-      } catch (error) {
-        console.error("Error fetching batches:", error);
-        // Handle error, e.g., set an error state or show an error message
-      }
-    };
-    console.log(batches);
+        try {
+          const response = await axios.get("http://localhost:8000/api/batches");
+          const updatedBatches = await Promise.all(
+            response.data.map(async (batch) => {
+              const studentsResponse = await axios.get(`http://localhost:8000/api/students/${encodeURIComponent(batch.title)}`);
+              batch.students = studentsResponse.data;
+              return batch;
+            })
+          );
+          setBatches(updatedBatches);
+        } catch (error) {
+          console.error("Error fetching batches:", error);
+        }
+      };
 
+    console.log(batches);
+    
     useEffect(() => {
       fetchBatches();
   }, []);
@@ -78,7 +85,7 @@ const ADashboard = () => {
               <Sidebar />
           </div>
           <div style={childStyle}>
-              <h1 style={{ color: '#1eb2a6', fontSize: '50px', paddingTop: '30px', marginBottom: '30px', fontFamily: "Times New Roman" }}>Dashboard</h1>
+              <h1 style={{ color: '#124653', fontSize: '50px', paddingTop: '30px', marginBottom: '30px', fontFamily: "Times New Roman" }}>Dashboard</h1>
               <div style={{ display: 'flex', flexWrap: 'wrap' }}>
                   {batches && batches.map((batch, index) => (
                       <Card key={index} style={cardContainerStyle}>
@@ -88,7 +95,7 @@ const ADashboard = () => {
                               </Typography>
                           </CardContent>
                           <CardActions style={{ paddingLeft: '13px', gap: '90px' }}>
-                              <Link to="/students">
+                          <Link to={`/students/${encodeURIComponent(batch.title)}`}>
                                   <Button size="small" style={buttonStyle}>
                                       View Students
                                   </Button>
