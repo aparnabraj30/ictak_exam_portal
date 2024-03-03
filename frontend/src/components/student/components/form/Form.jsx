@@ -1,7 +1,8 @@
 import './Form.css';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Modal, Button } from 'react-bootstrap';
+import axios from 'axios';
 
 function Form() {
 
@@ -69,7 +70,7 @@ function Form() {
   }
   const onChangeHandler = (event) => {
 
-    console.log(event)
+    // console.log(event)
     if (event.target.name === 'languages') {
 
       let copy = { ...formData }
@@ -90,23 +91,29 @@ function Form() {
     }
   }
 
-  const onSubmitHandler = (event) => {
+  const onSubmitHandler = async (event) => {
     event.preventDefault();
-    
+
     const isValid = validateForm();
 
     if (isValid) {
-      console.log(formData);
-      setIsFormSubmitted(true);
-      // setIsFormDisabled(true);
-      setIsFormFade(true); 
-      // setTimeout(() => setIsFormDisabled(true), 500);
-      console.log("Submitted");
-    } else {
-      console.log("Form validation failed");
-    }
-  }
+        try {
+            const response = await axios.post("http://localhost:8000/api/students/register", {
+              ...formData,
+              batch: formData.batch,
+          });
 
+            console.log(response.data);
+
+            setIsFormSubmitted(true);
+            setIsFormFade(true);
+        } catch (error) {
+            console.error("Error submitting form:", error);
+        }
+    } else {
+        console.log("Form validation failed");
+    }
+};
   const onClosePopup = () => {
     setIsFormSubmitted(false);
   };
