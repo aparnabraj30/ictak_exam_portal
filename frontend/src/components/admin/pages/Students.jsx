@@ -1,51 +1,115 @@
-import * as React from 'react';
-import Box from '@mui/material/Box';
-import { DataGrid } from '@mui/x-data-grid';
 import Sidebar from '../components/Sidebar';
+import { useParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 
 const containerStyle = {
     display: 'flex',
-    gap: '45px'
+    gap: '45px',
+    
 };
 
 const childStyle = {
-    marginLeft : '-27px',
-    marginRight: '10px', 
+    marginLeft: '-27px',
+    marginRight: '10px',
+    
 };
 
-const columns = [
-  { field: 'id', headerName: 'No.', width: 100 },
-  { field: 'fullName', headerName: 'Name', width: 200 },
-  { field: 'email', headerName: 'Email', width: 200, editable: true },
-  { field: 'phone', headerName: 'Phone No.', type: 'number', width: 180, editable: true, marginRight: '50px' },
-  { field: 'dob', headerName: 'DoB', width: 150, editable: true },
-  { field: 'gender', headerName: 'Gender', width: 70, editable: true },
-];
+const tableStyle = {
+    width: '154%', // Increased width of the table
+    borderCollapse: 'collapse',
+    marginTop: '20px',
+    // fontFamily: 'Times New Roman'
+    
+};
 
-const rows = [
-  { id: 1, fullName: 'Jon Snow', batch: 'KKEM March CSE', email: 'jon.snow@example.com', phone: 1234567890, dob: '1990-01-01', gender: 'M' },
-  { id: 2, fullName: 'Cersei Lannister', batch: 'Batch 2', email: 'cersei.lannister@example.com', phone: 9876543210, dob: '1980-05-05', gender: 'F' },
+const thTdStyle = {
+    border: '1px solid #dddddd',
+    textAlign: 'center',
+    padding: '20px',
+    height: '60px',
+    paddingLeft: '20px', // Adjusted paddingLeft
+    backgroundColor: '#0D2426', // Background color set to #0D2426
+    color: '#ffffff',
+};
+
+const tbodyStyle = {
+    textAlign: 'center',
+    padding: '20px',
+    height: '150px',
+    paddingLeft: '20px',
+};
+
+
   
-  // Add more rows as needed
-];
 
-export default function DataGridDemo() {
-  return (
-    <div style={containerStyle}>
-      <div style={childStyle}>
-        <Sidebar />
-      </div>
-      <div style={childStyle}>
-        <h1 style={{ color: '#1eb2a6', fontSize: '50px', paddingTop: '30px', marginBottom: '50px', fontFamily: "Times New Roman" }}>Eligible Students</h1>
-        <Box sx={{ height: 700, width: '110%' }}>
-          <DataGrid
-            rows={rows}
-            columns={columns}
-            pageSize={5}
-            disableSelectionOnClick
-          />
-        </Box>
-      </div>
-    </div>
-  );
-}
+const StudentsList = () => {
+  const { batchName } = useParams();
+  const [students, setStudents] = useState([]);
+
+    useEffect(() => {
+        console.log('Batch Name:', batchName);
+        const fetchStudents = async () => {
+            try {
+                const response = await axios.get(`http://localhost:8000/api/students/${batchName}`);
+                console.log('Fetched students:', response.data); 
+                setStudents(response.data);
+            } catch (error) {
+                console.error("Error fetching students:", error);
+            }
+        };
+
+        fetchStudents();
+    }, [batchName]);
+
+    const getRowStyle = (params) => {
+        return {
+          backgroundColor: params.index % 2 === 0 ? '#ffffff' : '#d3d9d4',
+          '&:hover': {
+            backgroundColor: params.index % 2 === 0 ? '#ffffff' : '#d3d9d4',
+          },
+        };
+      };
+
+      const toPascalCase = (str) => {
+        return str.replace(/\w+/g, function (word) {
+            return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+        });
+    };
+      return (
+        <div style={containerStyle}>
+            <div style={childStyle}>
+                <Sidebar />
+            </div>
+            <div style={childStyle}>
+                <h1 style={{ color: '#124653', fontSize: '50px', paddingTop: '30px', marginBottom: '50px', fontFamily: "Times New Roman" }}>Eligible Students - {batchName}</h1>
+                <table style={tableStyle}>
+                    <thead>
+                    <tr style={thTdStyle}>
+                            <th>No.</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone No.</th>
+                            <th>DoB</th>
+                            <th>Gender</th>
+                        </tr>
+                    </thead>
+                    <tbody style={tbodyStyle}>
+                        {students.map((student, index) => (
+                            <tr key={index} style={getRowStyle({ index })}>
+                                <td>{index + 1}</td>
+                                <td>{toPascalCase(student.name)}</td>
+                                <td>{student.email}</td>
+                                <td>{student.phone}</td>
+                                <td>{new Date(student.dob).toLocaleDateString('en-GB')}</td>
+                                <td>{student.gender}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+};
+
+export default StudentsList;
